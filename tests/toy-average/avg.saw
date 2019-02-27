@@ -1,0 +1,35 @@
+l <- llvm_load_module "avg.bc";
+
+avg_ref <- llvm_extract l "avg_ref" llvm_pure;
+avg_imp <- llvm_extract l "avg_imp" llvm_pure;
+
+let thm = {{ \a b -> avg_ref a b == avg_imp a b }};
+print "Prove (ref a b == imp a b) with direct extraction";
+time (prove z3 thm);
+
+a <- fresh_symbolic "a" {| [32] |};
+b <- fresh_symbolic "b" {| [32] |};
+
+let allocs = [];
+let inputs = [ ("a", a, 1), ("b", b, 1) ];
+let output = [ ("return", 1) ];
+
+ref_term <- llvm_symexec l "avg_ref" allocs inputs output true;
+imp_term <- llvm_symexec l "avg_imp" allocs inputs output true;
+
+cmd1 <- fresh_symbolic "cmd1" {| [32] |};
+cmd2 <- fresh_symbolic "cmd2" {| [32] |};
+let syn_params = [ ("cmd1", cmd1, 1), ("cmd2", cmd2, 1) ];
+
+syn_term <- llvm_symexec l "avg_syn" allocs (concat inputs syn_params) output true;
+
+ref_func <- abstract_symbolic ref_term;
+imp_func <- abstract_symbolic imp_term;
+print "Prove (ref a b == imp a b) with symexec extracted model (abstracted)";
+time (prove_print z3 {{ ref_func a b == imp_func a b }});
+
+let synth_query = {{ ref_term == syn_term }};
+print "Query SAT assignment for synth params";
+time (sat_print z3 synth_query);
+
+exit 0;
