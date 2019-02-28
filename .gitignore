@@ -105,3 +105,6 @@ venv.bak/
 
 # clang
 *.bc
+
+# vim
+*.swp
