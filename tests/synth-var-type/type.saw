@@ -1,0 +1,61 @@
+l <- llvm_load_module "type.bc";
+
+arr <- fresh_symbolic "arr" {| [5][32] |};
+a <- fresh_symbolic "a" {| [32] |};
+b <- fresh_symbolic "b" {| [32] |};
+
+let allocs = [ ("arr", 5) ];
+let inputs = [ ("*arr", arr, 5), ("a", a, 1), ("b", b, 1) ];
+let output = [ ("return", 1), ("*arr", 5) ];
+
+print "SymExec on reference program";
+f_ref <- time (llvm_symexec l "type_ref" allocs inputs output true);
+write_core "type_ref.core" f_ref;
+
+
+
+sbv0 <- fresh_symbolic "sbv0" {| [32] |};
+sbv1 <- fresh_symbolic "sbv1" {| [32] |};
+sbv2 <- fresh_symbolic "sbv2" {| [32] |};
+sbvs <- fresh_symbolic "sbvs" {| [3][32] |};
+
+let allocs_free_bv = [];
+let inputs_free_bv = [ ("sbv0", sbv0, 1), ("sbv1", sbv1, 1), ("sbv2", sbv2, 1) ];
+
+let allocs_lump_bv = [ ("sbvs", 3) ];
+let inputs_lump_bv = [ ("*sbvs", sbvs, 3) ];
+
+print "SymExec on free bv syn var";
+f_free_bv <- time (llvm_symexec l "type_free_bv" (concat allocs allocs_free_bv) (concat inputs inputs_free_bv) output true);
+write_core "type_free_bv.core" f_free_bv;
+print "Sanity check ref != free_bv w/o concretization";
+time (sat_print z3 {{ ~(f_ref == f_free_bv) }});
+
+print "SymExec on lump bv syn var";
+f_lump_bv <- time (llvm_symexec l "type_lump_bv" (concat allocs allocs_lump_bv) (concat inputs inputs_lump_bv) output true);
+write_core "type_lump_bv.core" f_lump_bv;
+print "Sanity check ref != lump_bv w/o concretization";
+time (sat_print z3 {{ ~(f_ref == f_lump_bv) }});
+
+
+
+sbv0 <- fresh_symbolic "sbv0" {| [32] |};
+sbit0 <- fresh_symbolic "sbit0" {| [1] |};
+sbit1 <- fresh_symbolic "sbit1" {| [1] |};
+
+sbvs <- fresh_symbolic "sbvs" {| [1][32] |};
+sbits <- fresh_symbolic "sbits" {| [2][1] |};
+
+let allocs_free_bool = [];
+let inputs_free_bool = [ ("sbit0", sbit0, 1), ("sbit1", sbit1, 1), ("sbv0", sbv0, 1) ];
+
+let allocs_lump_bool = [ ("sbits", 2), ("sbvs", 1) ];
+let inputs_lump_bool = [ ("*sbits", sbits, 2), ("*sbvs", sbvs, 1) ];
+
+print "SymExec on free bool syn var";
+f_free_bool <- time (llvm_symexec l "type_free_bool" (concat allocs allocs_free_bool) (concat inputs inputs_free_bool) output true);
+write_core "type_free_bool.core" f_free_bool;
+print "Sanity check ref != free_bool w/o concretization";
+time (sat_print z3 {{ ~(f_ref == f_free_bool) }});
+
+exit 0;
