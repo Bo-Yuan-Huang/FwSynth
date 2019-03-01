@@ -1,50 +1,40 @@
 l <- llvm_load_module "fib.bc";
 
-arr <- fresh_symbolic "arr" {| [10][32] |};
-a <- fresh_symbolic "a" {| [32] |};
-b <- fresh_symbolic "b" {| [32] |};
+let BUFF_SIZE = 5;
+let WIDTH = 32;
 
-let allocs = [ ("arr", 10) ];
-let inputs = [ ("*arr", arr, 10), ("a", a, 1), ("b", b, 1) ];
-let outputs = [ ("return", 1) ];
+arr <- fresh_symbolic "arr" {| [BUFF_SIZE][WIDTH] |};
+a <- fresh_symbolic "a" {| [WIDTH] |};
+b <- fresh_symbolic "b" {| [WIDTH] |};
 
-fib_ref <- llvm_symexec l "fib_ref" allocs inputs outputs true;
+let allocs = [ ("arr", BUFF_SIZE) ];
+let inputs = [ ("*arr", arr, BUFF_SIZE), ("a", a, 1), ("b", b, 1) ];
+let outputs = [ ("return", 1), ("*arr", BUFF_SIZE) ];
 
-let inputs_com = [ ("*arr", arr, 10), ("a", b, 1), ("b", a , 1) ];
-fib_com <- llvm_symexec l "fib_com" allocs inputs_com outputs true;
+print "SymExec on reference program";
+fib_ref <- time (llvm_symexec l "fib_ref" allocs inputs outputs true);
+write_core "fib_ref.core" fib_ref;
 
-let thm = abstract_symbolic {{ fib_ref == fib_com }};
-print "Prove fib commutative via abstracted symexec";
-time (prove_print z3 thm);
-time (sat_print z3 thm);
+let SYN_NUM = 5;
+svs <- fresh_symbolic "svs" {| [SYN_NUM][WIDTH] |};
+let allocs_syn = [ ("svs", SYN_NUM) ];
+let inputs_syn = [ ("*svs", svs, SYN_NUM) ];
 
-let outputs = [ ("return", 1), ("*arr", 10) ];
-fib_ref <- llvm_symexec l "fib_ref" allocs inputs outputs true;
-fib_com <- llvm_symexec l "fib_com" allocs inputs_com outputs true;
-print "Prove equivalence of return & array";
-time (prove_print z3 {{ fib_ref == fib_com }});
+print "SymExec on synthesis target";
+fib_syn <- time (llvm_symexec l "fib_syn" (concat allocs allocs_syn) (concat inputs inputs_syn) outputs true);
+write_core "fib_syn.core" fib_syn;
+
+print "Sanity check ref != syn w/o concretization";
+time (sat_print z3 {{ ~(fib_ref == fib_syn) }});
 
 let fib_ref_ret = {{ fib_ref.0 }};
-let fib_com_ret = {{ fib_com.0 }};
-print "Prove equivalence of return only";
-time (prove_print z3 {{ fib_ref_ret == fib_ref_ret}});
+let fib_syn_ret = {{ fib_syn.0 }};
+print "Check equivalence of return only";
+time (sat_print z3 {{ fib_ref_ret == fib_ref_ret}});
 
 let fib_ref_arr = {{ fib_ref.1 }};
-let fib_com_arr = {{ fib_com.1 }};
-print "Prove equivalence of array only";
-time (prove_print z3 {{ fib_ref_arr == fib_com_arr }});
-
-sym_0 <- fresh_symbolic "sym_0" {| [32] |};
-sym_1 <- fresh_symbolic "sym_1" {| [32] |};
-sym_2 <- fresh_symbolic "sym_2" {| [32] |};
-sym_3 <- fresh_symbolic "sym_3" {| [32] |};
-sym_4 <- fresh_symbolic "sym_4" {| [32] |};
-
-let syn_params = [ ("sym_0", sym_0, 1), ("sym_1", sym_1, 1), ("sym_2", sym_2, 1), ("sym_3", sym_3, 1), ("sym_4", sym_4, 1) ];
-
-print "Get symbolic term of the synthesis target";
-fib_syn <- llvm_symexec l "fib_syn" allocs (concat inputs syn_params) outputs false;
-
-write_core "fib_syn.core" fib_syn;
+let fib_syn_arr = {{ fib_syn.1 }};
+print "Check equivalence of array only";
+time (sat_print z3 {{ fib_ref_arr == fib_syn_arr }});
 
 exit 0;

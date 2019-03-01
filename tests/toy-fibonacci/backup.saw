@@ -1,0 +1,41 @@
+sym_0 <- fresh_symbolic "sym_0" {| [32] |};
+sym_1 <- fresh_symbolic "sym_1" {| [32] |};
+sym_2 <- fresh_symbolic "sym_2" {| [32] |};
+sym_3 <- fresh_symbolic "sym_3" {| [32] |};
+sym_4 <- fresh_symbolic "sym_4" {| [32] |};
+
+sbl_0 <- fresh_symbolic "sbl_0" {| [1] |};
+sbl_1 <- fresh_symbolic "sbl_1" {| [1] |};
+sbl_2 <- fresh_symbolic "sbl_2" {| [1] |};
+
+let syn_var_type = [ ("sbl_0", sbl_0, 1), ("sbl_1", sbl_1, 1), ("sbl_2", sbl_2, 1) ];
+
+print "Profile sym exec with bool select branch";
+fib_type <- time (llvm_symexec l "fib_type" allocs (concat inputs syn_var_type) outputs true);
+
+let syn_var = [ ("sym_0", sym_0, 1), ("sym_1", sym_1, 1), ("sym_2", sym_2, 1) ];
+
+print "Profile sym exec with select branch";
+fib_sel <- time (llvm_symexec l "fib_sel" allocs (concat inputs syn_var) outputs true);
+
+print "Profile sym exec with array index (out of loop)";
+fib_arr_top <- time (llvm_symexec l "fib_arr_top" allocs (concat inputs syn_var) outputs true);
+
+print "Profile sym exec with array index";
+fib_arr <- time (llvm_symexec l "fib_arr" allocs (concat inputs syn_var) outputs true);
+
+print "Profile sym exec with array index (loosely bounded)";
+fib_arr_bound <- time (llvm_symexec l "fib_arr_bound_loose" allocs (concat inputs syn_var) outputs true);
+
+print "Profile sym exec with array index (bounded)";
+fib_arr_bound <- time (llvm_symexec l "fib_arr_bound" allocs (concat inputs syn_var) outputs true);
+
+
+let syn_params = [ ("sym_0", sym_0, 1), ("sym_1", sym_1, 1), ("sym_2", sym_2, 1), ("sym_3", sym_3, 1), ("sym_4", sym_4, 1) ];
+
+print "Get symbolic term of the synthesis target";
+fib_syn <- llvm_symexec l "fib_syn" allocs (concat inputs syn_params) outputs false;
+
+write_core "fib_syn.core" fib_syn;
+
+
