@@ -1,0 +1,31 @@
+l <- llvm_load_module "array.bc";
+
+arr <- fresh_symbolic "arr" {| [5][32] |};
+a <- fresh_symbolic "a" {| [32] |};
+
+let allocs = [ ("arr", 5) ];
+let inputs = [ ("*arr", arr, 5), ("a", a, 1) ];
+let output = [ ("return", 1), ("*arr", 5) ];
+
+print "SymExec on reference program";
+f_ref <- time (llvm_symexec l "array_ref" allocs inputs output true);
+write_core "array_ref.core" f_ref;
+
+synv0 <- fresh_symbolic "synv0" {| [32] |};
+synv1 <- fresh_symbolic "synv1" {| [32] |};
+
+let synvar = [ ("synv0", synv0, 1), ("synv1", synv1, 1) ];
+
+print "SymExec on synthesis template";
+f_syn <- time (llvm_symexec l "array_syn" allocs (concat inputs synvar) output true);
+write_core "array_syn.core" f_syn;
+
+print "Sanity check that there is SAT assignment for the synthesis problem";
+let sanity = {{ f_ref == f_syn }};
+time (sat_print z3 sanity);
+
+print "Prove that the result is correct";
+let thm = {{ ~((synv0 == 0) && (synv1 == 0)) || (f_ref == f_syn) }};
+time (prove_print z3 thm);
+
+exit 0;
