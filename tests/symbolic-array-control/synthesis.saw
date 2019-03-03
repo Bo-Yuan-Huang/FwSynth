@@ -1,0 +1,86 @@
+include "symexec.saw";
+
+let target = {{ f_ref == f_syn }};
+write_core "synth_target.core" target;
+
+
+
+let sat_unsat_func = 
+  do {
+    print "No SAT assignment. Synthesis failed.";
+    return false;
+  };
+
+let sat_sat_func cex = 
+  do {
+    print "Dummy binding for recursive call";
+    return true;
+  };
+
+let prove_valid_func = 
+  do {
+    return true;
+  };
+
+let prove_invalid_func cex = 
+  do {
+    print "Dummy binding for recursive call";
+    return false;
+  };
+
+
+
+let prove_invalid_func cex = 
+  do {
+    print "invalid:";
+    print cex;
+
+    target <- read_core "synth_target.core";
+
+    let good_inp_arg = {{ (arr, a) == (cex.0, cex.1) }};
+    let partial_spec = {{ ~good_inp_arg || target }};
+
+    let bad_syn_var = {{ (synv0, synv1) != (cex.2, cex.3) }};
+    let new_target = {{ ~bad_syn_var || partial_spec }};
+
+    write_core "synth_target.core" new_target;
+
+    r <- sat z3 new_target;
+
+    caseSatResult r sat_unsat_func sat_sat_func;
+
+    return true;
+  };
+
+
+
+let sat_sat_func cex = 
+  do {
+    print "sat:";
+    print cex;
+    let syn_var_candidate = {{ (synv0, synv1) == (cex.2, cex.3) }};
+
+    target <- read_core "synth_target.core";
+
+    let new_target = {{ ~syn_var_candidate || target }};
+
+    r <- prove z3 new_target;
+
+    let export_result = 
+      do { 
+        write_core "result.core" new_target; 
+        print "write result to result.core";
+        return true;
+      };
+
+    caseProofResult r export_result prove_invalid_func;
+
+    return true;
+  };
+
+
+
+r <- sat z3 target;
+caseSatResult r sat_unsat_func sat_sat_func;
+
+print "Done";

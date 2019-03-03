@@ -1,0 +1,22 @@
+l <- llvm_load_module "array.bc";
+
+arr <- fresh_symbolic "arr" {| [5][32] |};
+a <- fresh_symbolic "a" {| [32] |};
+
+let allocs = [ ("arr", 5) ];
+let inputs = [ ("*arr", arr, 5), ("a", a, 1) ];
+let output = [ ("return", 1), ("*arr", 5) ];
+
+print "SymExec on reference program -- stored at array_ref.core";
+f_ref <- time (llvm_symexec l "array_ref" allocs inputs output true);
+write_core "array_ref.core" f_ref;
+
+synv0 <- fresh_symbolic "synv0" {| [32] |};
+synv1 <- fresh_symbolic "synv1" {| [32] |};
+
+let synvar = [ ("synv0", synv0, 1), ("synv1", synv1, 1) ];
+
+print "SymExec on synthesis target -- stored at array_syn.core";
+f_syn <- time (llvm_symexec l "array_syn" allocs (concat inputs synvar) output true);
+write_core "array_syn.core" f_syn;
+
