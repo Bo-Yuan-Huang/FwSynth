@@ -1,8 +1,6 @@
 include "symexec.saw";
 
 let target = {{ f_ref == f_syn }};
-write_core "synth_target.core" target;
-
 
 
 let sat_unsat_func = 
@@ -11,7 +9,7 @@ let sat_unsat_func =
     return false;
   };
 
-let sat_sat_func cex = 
+let sat_sat_func target cex = 
   do {
     print "Dummy binding for recursive call";
     return true;
@@ -22,7 +20,7 @@ let prove_valid_func =
     return true;
   };
 
-let prove_invalid_func cex = 
+let prove_invalid_func target cex = 
   do {
     print "Dummy binding for recursive call";
     return false;
@@ -30,12 +28,10 @@ let prove_invalid_func cex =
 
 
 
-let prove_invalid_func cex = 
+let prove_invalid_func target cex = 
   do {
     print "invalid:";
     print cex;
-
-    target <- read_core "synth_target.core";
 
     let good_inp_arg = {{ (arr, a) == (cex.0, cex.1) }};
     let partial_spec = {{ ~good_inp_arg || target }};
@@ -43,24 +39,20 @@ let prove_invalid_func cex =
     let bad_syn_var = {{ (synv0, synv1) != (cex.2, cex.3) }};
     let new_target = {{ ~bad_syn_var || partial_spec }};
 
-    write_core "synth_target.core" new_target;
-
     r <- sat z3 new_target;
 
-    caseSatResult r sat_unsat_func sat_sat_func;
+    caseSatResult r sat_unsat_func (sat_sat_func new_target);
 
     return true;
   };
 
 
 
-let sat_sat_func cex = 
+let sat_sat_func target cex = 
   do {
     print "sat:";
     print cex;
     let syn_var_candidate = {{ (synv0, synv1) == (cex.2, cex.3) }};
-
-    target <- read_core "synth_target.core";
 
     let new_target = {{ ~syn_var_candidate || target }};
 
@@ -73,7 +65,7 @@ let sat_sat_func cex =
         return true;
       };
 
-    caseProofResult r export_result prove_invalid_func;
+    caseProofResult r export_result (prove_invalid_func new_target);
 
     return true;
   };
@@ -81,6 +73,6 @@ let sat_sat_func cex =
 
 
 r <- sat z3 target;
-caseSatResult r sat_unsat_func sat_sat_func;
+caseSatResult r sat_unsat_func (sat_sat_func target);
 
 print "Done";
