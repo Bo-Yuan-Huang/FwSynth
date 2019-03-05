@@ -22,3 +22,18 @@ let inputs_syn = [ ("*svs", svs, SYN_NUM) ];
 print "SymExec on synthesis target";
 fib_syn <- time (llvm_symexec l "fib_syn" (concat allocs allocs_syn) (concat inputs inputs_syn) outputs true);
 
+
+let reference = fib_ref;
+let template = fib_syn;
+
+abs_reference <- abstract_symbolic reference;
+abs_template <- abstract_symbolic template;
+
+let fix_syn_var_initial cex = {{ svs == cex.3 }};
+
+let fix_syn_var cex = {{ svs == cex.0 }};
+
+let concretize_reference cex = {{ (abs_reference cex.1 cex.2) }};
+
+let concretize_template cex = {{ (abs_template cex.0 cex.1 cex.2 svs) }};
+
