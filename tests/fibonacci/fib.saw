@@ -15,7 +15,7 @@ print "SymExec on reference program";
 fib_ref <- time (llvm_symexec l "fib_ref" allocs inputs outputs true);
 write_core "fib_ref.core" fib_ref;
 
-let SYN_NUM = 5;
+let SYN_NUM = 6;
 svs <- fresh_symbolic "svs" {| [SYN_NUM][WIDTH] |};
 let allocs_syn = [ ("svs", SYN_NUM) ];
 let inputs_syn = [ ("*svs", svs, SYN_NUM) ];
