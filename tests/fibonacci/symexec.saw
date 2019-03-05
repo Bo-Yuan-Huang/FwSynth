@@ -1,0 +1,24 @@
+l <- llvm_load_module "fib.bc";
+
+let BUFF_SIZE = 5;
+let WIDTH = 32;
+
+arr <- fresh_symbolic "arr" {| [BUFF_SIZE][WIDTH] |};
+a <- fresh_symbolic "a" {| [WIDTH] |};
+b <- fresh_symbolic "b" {| [WIDTH] |};
+
+let allocs = [ ("arr", BUFF_SIZE) ];
+let inputs = [ ("*arr", arr, BUFF_SIZE), ("a", a, 1), ("b", b, 1) ];
+let outputs = [ ("return", 1), ("*arr", BUFF_SIZE) ];
+
+print "SymExec on reference program";
+fib_ref <- time (llvm_symexec l "fib_ref" allocs inputs outputs true);
+
+let SYN_NUM = 6;
+svs <- fresh_symbolic "svs" {| [SYN_NUM][WIDTH] |};
+let allocs_syn = [ ("svs", SYN_NUM) ];
+let inputs_syn = [ ("*svs", svs, SYN_NUM) ];
+
+print "SymExec on synthesis target";
+fib_syn <- time (llvm_symexec l "fib_syn" (concat allocs allocs_syn) (concat inputs inputs_syn) outputs true);
+

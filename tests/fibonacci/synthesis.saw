@@ -1,0 +1,105 @@
+include "symexec.saw";
+
+let inp_var = {{ (arr, a, b) }};
+let inp_cex cex = {{ (cex.0, cex.1, cex.2) }};
+let syn_var = {{ svs }};
+let syn_cex cex = {{ cex.3 }};
+
+let template = {{ fib_ref == fib_syn }};
+
+
+let sat_unsat_func = 
+  do {
+    print "No SAT assignment. Synthesis failed.";
+    return false;
+  };
+
+let kernel_sat_func in_examples cex = 
+  do {
+    print "Dummy binding (sat) for recursive call";
+    return true;
+  };
+
+let prove_valid_func = 
+  do {
+    return true;
+  };
+
+let prove_invalid_func in_examples in_cex = 
+  do {
+    print "Dummy binding (prove) for recursive call";
+    return false;
+  };
+
+
+let prove_invalid_func examples in_cex = 
+  do {
+    let inp_arg_in_cex = inp_cex in_cex;
+    let inp_arg_assign = {{ (inp_var == inp_arg_in_cex) }};
+    let partial_spec = {{ (~inp_arg_assign || template) }};
+    let new_examples = {{ (partial_spec && examples) }};
+
+    let t_ref = abstract_symbolic fib_ref;
+    let t_syn = abstract_symbolic fib_syn;
+
+    let partial_spec = {{ (t_ref in_cex.1 in_cex.2) == (t_syn in_cex.0 in_cex.1 in_cex.2 svs) }};
+    let new_examples = {{ (partial_spec && examples) }};
+
+    r <- sat z3 {{ new_examples }};
+    print r;
+
+    caseSatResult r sat_unsat_func (kernel_sat_func new_examples);
+
+    return true;
+  };
+
+
+let sat_sat_func examples in_cex = 
+  do {
+    let syn_var_in_cex = syn_cex in_cex;
+    let syn_var_assign = {{ syn_var == syn_var_in_cex }};
+    let conjecture = {{ ~syn_var_assign || template }};
+
+    r <- prove z3 conjecture;
+    print r;
+
+    let export_result = 
+      do { 
+        write_core "result.core" conjecture; 
+        print "write result to result.core";
+        return true;
+      };
+
+    caseProofResult r export_result (prove_invalid_func examples);
+
+    return true;
+  };
+
+let kernel_sat_func examples in_cex = 
+  do {
+    let syn_var_assign = {{ syn_var == in_cex.0}};
+    let conjecture = {{ ~syn_var_assign || template }};
+
+    r <- prove z3 conjecture;
+    print r;
+
+    let export_result = 
+      do { 
+        write_core "result.core" conjecture; 
+        print "write result to result.core";
+        return true;
+      };
+
+    caseProofResult r export_result (prove_invalid_func examples);
+
+    return true;
+  };
+
+
+let examples = {{ True }};
+
+r <- sat z3 template;
+print r;
+caseSatResult r sat_unsat_func (sat_sat_func examples);
+
+print "Done";
