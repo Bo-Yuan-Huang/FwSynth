@@ -1,0 +1,31 @@
+let SYN_NUM = 2;
+let PKT_DATA_WID = 8; 
+let PKT_DATA_NUM = 8;
+let PHY_DATA_WID = 64;
+let PHY_DATA_NUM = 1;
+let ADDR_WID = 64;
+
+llvm_module_reference <- llvm_load_module "lmac_reference.bc";
+llvm_module_template <- llvm_load_module "lmac_template.bc";
+
+pkt_size <- fresh_symbolic "pkt_size" {| [ADDR_WID] |};
+pkt_arr <- fresh_symbolic "pkt_arr" {| [PKT_DATA_NUM][PKT_DATA_WID] |};
+phy_arr <- fresh_symbolic "phy_arr" {| [PHY_DATA_NUM][PHY_DATA_WID] |};
+
+let allocs = [ ("pkt_arr", PKT_DATA_NUM), ("phy_arr", PHY_DATA_NUM) ];
+let inputs = [ ("*pkt_arr", pkt_arr, PKT_DATA_NUM), ("pkt_size", pkt_size, 1), ("*phy_arr", phy_arr, PHY_DATA_NUM) ];
+let output = [ ("*phy_arr", PHY_DATA_NUM) ];
+
+print "SymExec on reference program";
+term_reference <- time (llvm_symexec llvm_module_reference "LmacTxReference" allocs inputs output true);
+write_core "lmac_reference.core" term_reference;
+
+svs <- fresh_symbolic "svs" {| [SYN_NUM][32] |};
+
+let allocs_template = [ ("svs", SYN_NUM) ];
+let inputs_template = [ ("*svs", svs, SYN_NUM) ];
+
+print "SymExec on template program";
+term_template <- time (llvm_symexec llvm_module_template "LmacTxTemplate" (concat allocs allocs_template) (concat inputs inputs_template) output true);
+write_core "lmac_template.core" term_template;
+

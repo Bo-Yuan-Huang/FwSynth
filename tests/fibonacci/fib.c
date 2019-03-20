@@ -3,7 +3,7 @@
 #define BUFF_SIZE 5
 #define PROFILE_ARRAY 1
 
-uint32_t fib_ref(uint32_t *arr, uint32_t a, uint32_t b) {
+uint32_t fib_ref(uint32_t* arr, uint32_t a, uint32_t b) {
   arr[0] = a;
   arr[1] = b;
   for (uint32_t i = 2; i < BUFF_SIZE; i++) {
@@ -16,7 +16,7 @@ uint32_t cmd_add(uint32_t a, uint32_t b) { return a + b; }
 
 uint32_t cmd_sub(uint32_t a, uint32_t b) { return a - b; }
 
-uint32_t fib_syn(uint32_t *arr, uint32_t a, uint32_t b, uint32_t *svs) {
+uint32_t fib_syn(uint32_t* arr, uint32_t a, uint32_t b, uint32_t* svs) {
   arr[0] = (svs[0] == 0) ? a : b;
   arr[1] = (svs[1] == 0) ? a : b;
 
