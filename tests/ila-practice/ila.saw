@@ -1,0 +1,59 @@
+l <- llvm_load_module "ila.bc";
+
+let BUFF_SIZE = 64;
+let WIDTH = 32;
+
+arr <- fresh_symbolic "arr" {| [BUFF_SIZE][WIDTH] |};
+div <- fresh_symbolic "div" {| [WIDTH] |};
+buff_size <- fresh_symbolic "BUFF_SIZE" {| [32] |};
+
+let allocs = [ ("arr", BUFF_SIZE) ];
+let inputs = [ ("*arr", arr, BUFF_SIZE), ("div", div, 1), ("BUFF_SIZE", buff_size, 1) ];
+let outputs = [ ("return", 1) ];
+
+print "SymExec on reference program";
+term_ila_ref <- time (llvm_symexec l "reference" allocs inputs outputs true);
+write_core "ila_reference.core" term_ila_ref;
+
+print "SymExec on synthesis answer";
+term_ila_ans <- time (llvm_symexec l "answer" allocs inputs outputs true);
+write_core "ila_answer.core" term_ila_ans;
+
+print "Prove that reference == answer (fully concretized)";
+time (prove_print z3 {{ term_ila_ref == term_ila_ans }});
+
+let SYN_NUM = 4;
+svs <- fresh_symbolic "svs" {| [SYN_NUM][WIDTH] |};
+let allocs_syn = [ ("svs", SYN_NUM) ];
+let inputs_syn = [ ("*svs", svs, SYN_NUM) ];
+
+print "SymExec on synthesis template";
+term_ila_tem <- time (llvm_symexec l "template" (concat allocs allocs_syn) (concat inputs inputs_syn) outputs true);
+write_core "ila_template.core" term_ila_tem;
+
+func_ila_ref <- abstract_symbolic term_ila_ref;
+func_ila_tem <- abstract_symbolic term_ila_tem;
+
+print "Sanity check that exist svs s.t. ref != tem when buff size == 20";
+r <- time (sat z3 {{ func_ila_ref arr div 20 != func_ila_tem arr div 20 svs }});
+print r;
+
+print "Sanity check that exist svs s.t. reference != template";
+r <- time (sat z3 {{ term_ila_ref != term_ila_tem }});
+print r;
+
+print "Prove (will fail) that reference == template";
+r <- time (prove z3 {{ term_ila_ref == term_ila_tem }});
+print r;
+
+let reference = term_ila_ref;
+let template = term_ila_tem;
+
+abs_reference <- abstract_symbolic reference;
+abs_template <- abstract_symbolic template;
+
+let fix_syn_var_initial cex = {{ svs == cex.2 }};
+let fix_syn_var cex = {{ svs == cex.0 }};
+let concretize_reference cex = {{ (abs_reference cex.0 cex.1) }};
+let concretize_template cex = {{ (abs_template cex.0 cex.1 svs) }};
+
