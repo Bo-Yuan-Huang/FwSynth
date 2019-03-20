@@ -1,0 +1,23 @@
+l <- llvm_load_module "alias.bc";
+
+a <- fresh_symbolic "a" {| [32] |};
+b <- fresh_symbolic "b" {| [32] |};
+arr <- fresh_symbolic "arr" {| [10][32] |};
+
+let allocs = [ ("arr", 10) ];
+let inputs = [ ("*arr", arr, 10), ("a", a, 1), ("b", b, 1) ];
+let output = [ ("*arr", 10) ];
+
+print "SymExec on reference program";
+term_reference <- time (llvm_symexec l "Reference" allocs inputs output true);
+write_core "alias_reference.core" term_reference;
+
+let output = [ ("*(sts.0)", 10) ];
+
+print "SymExec on target program";
+term_target <- time (llvm_symexec l "Target" allocs inputs output true);
+write_core "alias_target.core" term_target;
+
+let thm = {{ term_reference == term_target }};
+r <- time(prove z3 thm);
+print r;
