@@ -1,0 +1,23 @@
+l <- llvm_load_module "unin_func.bc";
+
+a <- fresh_symbolic "a" {| [32] |};
+b <- fresh_symbolic "b" {| [32] |};
+
+let allocs = [];
+let inputs = [ ("a", a, 1), ("b", b, 1) ];
+let output = [ ("return", 1) ];
+
+print "SymExec on reference program";
+term_reference <- time (llvm_symexec l "Reference" allocs inputs output true);
+write_core "unin_func_reference.core" term_reference;
+
+print "SymExec on target program";
+term_target <- time (llvm_symexec l "Target" allocs inputs output true);
+write_core "unin_func_target.core" term_target;
+
+term_bb <- llvm_symexec l "BlackBox" [] [ ("a", a, 1) ] [ ("return", 1) ] true;
+func_bb <- abstract_symbolic term_bb;
+let thm_1 = {{ ~(a != b) || (func_bb a != func_bb b) }};
+let thm_2 = {{ ~(a == b) || (func_bb a == func_bb b) }};
+time (prove z3 thm_1);
+time (prove z3 thm_2);
