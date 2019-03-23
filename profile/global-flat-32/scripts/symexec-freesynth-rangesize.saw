@@ -1,0 +1,14 @@
+pkt_num <- fresh_symbolic "pkt_num" {| [ADDR_WID] |};
+pkt_arr <- fresh_symbolic "pkt_arr" {| [PKT_NUM][PKT_WID] |};
+syn_arr <- fresh_symbolic "syn_arr" {| [SYN_NUM][32] |};
+
+let pkt_num_range = {{ ((pkt_num % (`(PKT_NUM) + 1)) >> 1) << 1 }};
+
+let allocs = [ ("pkt_arr", PKT_NUM), ("TX_FIFO_BUFF", PHY_NUM), ("syn_arr", SYN_NUM) ];
+let inputs = [ ("*pkt_arr", pkt_arr, PKT_NUM), ("pkt_num", pkt_num_range, 1), ("*syn_arr", syn_arr, SYN_NUM) ];
+let output = [ ("*TX_FIFO_BUFF", PHY_NUM) ];
+
+print (str_concat "SymExec w/ PKT_NUM = " (show ( PKT_NUM )));
+term_template <- time (llvm_symexec llvm_module_template "LmacTxTemplate" allocs inputs output true);
+file_name <- (str_concat (str_concat "archive/template_free_range_" (show PKT_NUM)) ".core");
+write_core file_name term_template;

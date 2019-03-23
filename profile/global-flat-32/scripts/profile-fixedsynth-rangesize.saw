@@ -1,0 +1,59 @@
+llvm_module_template <- llvm_load_module "lmac_template.bc";
+
+let PKT_WID = 32; 
+let PHY_WID = 64;
+let SYN_NUM = 2;
+let ADDR_WID = 32;
+
+let PKT_NUM = 16;
+let PHY_NUM = 8;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 18;
+let PHY_NUM = 9;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 20;
+let PHY_NUM = 10;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 22;
+let PHY_NUM = 11;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 24;
+let PHY_NUM = 12;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 26;
+let PHY_NUM = 13;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 28;
+let PHY_NUM = 14;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 30;
+let PHY_NUM = 15;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 32;
+let PHY_NUM = 16;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 34;
+let PHY_NUM = 17;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 36;
+let PHY_NUM = 18;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 38;
+let PHY_NUM = 19;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
+let PKT_NUM = 40;
+let PHY_NUM = 20;
+include "scripts/symexec-fixedsynth-rangesize.saw";
+
