@@ -1,0 +1,25 @@
+llvm_module_reference <- llvm_load_module "lmac_reference.bc";
+
+let PKT_WID = 32; 
+let PHY_WID = 64;
+let ADDR_WID = 32;
+
+let SymExec pkt_num = do {
+  let PKT_NUM = eval_int {{ pkt_num }};
+  let PHY_NUM = eval_int {{ pkt_num >> 1 }};
+
+  pkt_arr <- fresh_symbolic "pkt_arr" {| [PKT_NUM][PKT_WID] |};
+
+  let allocs = [ ("pkt_arr", PKT_NUM), ("g_PHY_ARR", PHY_NUM) ];
+  let inputs = [ ("*pkt_arr", pkt_arr, PKT_NUM), ("pkt_num", pkt_num, 1) ];
+  let output = [ ("*g_PHY_ARR", 1) ];
+
+  print (str_concat "SymExec w/ PKT_NUM = " (show ( PKT_NUM )));
+  term_reference <- time (llvm_symexec llvm_module_reference "LmacTxReference" 
+                          allocs inputs output true);
+  let file_name = (str_concat (str_concat "archive/reference_" (show PKT_NUM)) ".core");
+  write_core file_name term_reference;
+};
+
+SymExec {{ 0x00000008 }};
+

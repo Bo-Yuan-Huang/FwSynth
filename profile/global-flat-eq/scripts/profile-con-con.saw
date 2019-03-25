@@ -1,0 +1,36 @@
+llvm_module_template <- llvm_load_module "lmac_template.bc";
+
+let PKT_WID = 32; 
+let PHY_WID = 64;
+let SYN_NUM = 2;
+let ADDR_WID = 32;
+
+let SymExec pkt_num = do {
+  let PKT_NUM = eval_int {{ pkt_num }};
+  let PHY_NUM = eval_int {{ pkt_num >> 1 }};
+
+  pkt_arr <- fresh_symbolic "pkt_arr" {| [PKT_NUM][PKT_WID] |};
+
+  let syn_arr = {{ [0x00000000, 0x00000000] }};
+
+  let allocs = [ ("pkt_arr", PKT_NUM), ("TX_FIFO_BUFF", PHY_NUM), ("syn_arr", SYN_NUM) ];
+  let inputs = [ ("*pkt_arr", pkt_arr, PKT_NUM), ("pkt_num", pkt_num, 1), 
+                 ("*syn_arr", syn_arr, SYN_NUM) ];
+  let output = [ ("*TX_FIFO_BUFF", 1) ];
+
+  print (str_concat "SymExec w/ PKT_NUM = " (show ( PKT_NUM )));
+  term_template <- time (llvm_symexec llvm_module_template "LmacTxTemplate" 
+                         allocs inputs output true);
+  let file_name = (str_concat (str_concat "archive/tem_con_con_" (show PKT_NUM)) ".core");
+  write_core file_name term_template;
+};
+
+SymExec {{ 0x00000008 }};
+SymExec {{ 0x0000000a }};
+SymExec {{ 0x0000000c }};
+SymExec {{ 0x0000000e }};
+SymExec {{ 0x00000010 }};
+SymExec {{ 0x00000012 }};
+SymExec {{ 0x00000014 }};
+SymExec {{ 0x00000016 }};
+
