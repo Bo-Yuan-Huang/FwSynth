@@ -73,6 +73,7 @@ let Prove pkt_num = do {
   print r;
 };
 
+Prove {{ 8 : [PKT_WID] }};
 Prove {{ 16 : [PKT_WID] }};
 Prove {{ 32 : [PKT_WID] }};
 Prove {{ 64 : [PKT_WID] }};

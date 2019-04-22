@@ -1,14 +1,18 @@
-pkt_arr <- fresh_symbolic "pkt_arr" {| [8][32] |};
-syn_arr <- fresh_symbolic "syn_arr" {| [2][32] |};
+pkt_arr <- fresh_symbolic "pkt_arr" {| [6][32] |};
+syn_arr <- fresh_symbolic "syn_arr" {| [32] |};
 
-reference <- read_core "archive/reference_8.core";
-template <- read_core "archive/template_8.core";
+reference_term <- read_core "archive/ref_32.core";
+template_term <- read_core "archive/syn_32.core";
 
-func_reference <- abstract_symbolic reference;
-func_template <- abstract_symbolic template;
+func_reference <- abstract_symbolic reference_term;
+func_template <- abstract_symbolic template_term;
+
+let reference = {{ (func_reference pkt_arr) }};
+let template = {{ (func_template pkt_arr syn_arr) }};
 
 let fix_syn_var_initial cex = {{ syn_arr == cex.1 }};
 let fix_syn_var cex = {{ syn_arr == cex.0 }};
 let concretize_reference cex = {{ (func_reference cex.0) }};
 let concretize_template cex = {{ (func_template cex.0 syn_arr) }};
 
+include "scripts/lib_synthesis.saw";
