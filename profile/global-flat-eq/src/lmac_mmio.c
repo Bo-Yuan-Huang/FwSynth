@@ -85,7 +85,7 @@ void LmacMmioUpdateInstr1(/* input */ ADDR_T MMIO_ADDR_IN,
   MMIO_COUNTER = 0;
 
   PHY_DATA_T chunk = MMIO_LONG_0;
-#if 1
+#if 0
   chunk = (chunk << PKT_DATA_BIT_WIDTH) + MMIO_DATA_IN;
 #else
   chunk = (chunk << PKT_DATA_BIT_WIDTH) | MMIO_DATA_IN;

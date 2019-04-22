@@ -1,4 +1,5 @@
-llvm_module_template <- llvm_load_module "lmac_template.bc";
+lm_ref <- llvm_load_module "/data/FwSynth/profile/global-flat-eq/ref.bc";
+lm_tem <- llvm_load_module "tem.bc";
 
 let PKT_WID = 32; 
 let PHY_WID = 64;
@@ -8,8 +9,11 @@ let ADDR_WID = 32;
 let SymExec pkt_num = do {
   let PKT_NUM = eval_int {{ pkt_num }};
   let PHY_NUM = eval_int {{ pkt_num >> 1 }};
+  let PKT_SYM = eval_int {{ pkt_num - 2 }};
 
-  pkt_arr <- fresh_symbolic "pkt_arr" {| [PKT_NUM][PKT_WID] |};
+  let pkt_0 = {{ 0 : [PKT_WID] }};
+  pkt_sym <- fresh_symbolic "pkt_sym" {| [PKT_SYM][PKT_WID] |};
+  let pkt_arr = {{ [pkt_0, pkt_num] # pkt_sym }};
 
   let syn_arr = {{ [0x00000000, 0x00000000] }};
 
@@ -19,9 +23,9 @@ let SymExec pkt_num = do {
   let output = [ ("*TX_FIFO_BUFF", 1) ];
 
   print (str_concat "SymExec w/ PKT_NUM = " (show ( PKT_NUM )));
-  term_template <- time (llvm_symexec llvm_module_template "LmacTxTemplate" 
+  term_template <- time (llvm_symexec lm_tem "LmacTxTemplate" 
                          allocs inputs output true);
-  let file_name = (str_concat (str_concat "archive/tem_con_con_" (show PKT_NUM)) ".core");
+  let file_name = (str_concat (str_concat "archive/tem_" (show PKT_NUM)) ".core");
   write_core file_name term_template;
 };
 

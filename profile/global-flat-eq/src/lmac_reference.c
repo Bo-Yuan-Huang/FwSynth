@@ -21,7 +21,7 @@ void LmacTxReference(PKT_DATA_T* pkt_arr, ADDR_T pkt_num) {
     // accumulate byte into qword
     for (ADDR_T i = 0; i < SCALE; i++) {
       // big-endian
-#if 1
+#if 0
       qwrd = (qwrd << PKT_DATA_BIT_WIDTH) + pkt_arr[pkt_idx + i];
 #else
       qwrd = (qwrd << PKT_DATA_BIT_WIDTH) | pkt_arr[pkt_idx + i];
