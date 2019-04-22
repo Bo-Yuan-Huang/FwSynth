@@ -1,0 +1,13 @@
+
+func_reference <- abstract_symbolic reference_term;
+func_template <- abstract_symbolic template_term;
+
+let reference = {{ (func_reference pkt_arr) }};
+let template = {{ (func_template pkt_arr syn_arr) }};
+
+let fix_syn_var_initial cex = {{ syn_arr == cex.1 }};
+let fix_syn_var cex = {{ syn_arr == cex.0 }};
+let concretize_reference cex = {{ (func_reference cex.0) }};
+let concretize_template cex = {{ (func_template cex.0 syn_arr) }};
+
+include "scripts/lib_synthesis.saw";
