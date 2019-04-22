@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 /* design configuration */
+#include "pkt_num.h"
 
 // packet buffer
 #define PKT_DATA_T uint32_t

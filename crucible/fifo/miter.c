@@ -3,6 +3,13 @@
 
 uint32_t miter(PKT_DATA_T* pkt_arr, ADDR_T pkt_num) {
 
+  // manual pre-condition
+#if 0
+  if (pkt_arr[0] != 0 || pkt_arr[1] != pkt_num) {
+    return 0;
+  }
+#endif
+
   uint32_t syn_arr[1];
   syn_arr[0] = 0;
 
@@ -15,7 +22,7 @@ uint32_t miter(PKT_DATA_T* pkt_arr, ADDR_T pkt_num) {
       (g_PHY_ARR[2] == TX_FIFO_BUFF[2]) && (g_PHY_ARR[3] != TX_FIFO_BUFF[3]);
 #else
   bool res = true;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < (PKT_NUM / SCALE); i++) {
     res &= (g_PHY_ARR[i] == TX_FIFO_BUFF[i]);
   }
 #endif

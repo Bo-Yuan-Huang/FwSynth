@@ -3,7 +3,7 @@
 #include "config.h"
 
 // global variable
-PHY_DATA_T g_PHY_ARR[8];
+PHY_DATA_T g_PHY_ARR[PKT_NUM / SCALE];
 // PHY_DATA_T* g_PHY_ARR;
 
 /* LeWiz MAC core 2 transmit packet
