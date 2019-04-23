@@ -1,0 +1,28 @@
+let update_setup = do {
+  let gp = crucible_global "g";
+  x <- crucible_fresh_var "x" (llvm_int 32);
+  y <- crucible_fresh_var "y" (llvm_int 32);
+  let xv = crucible_term x;
+  let yv = crucible_term y;
+  let rv = crucible_term {{ x + y : [32] }};
+  crucible_execute_func [xv, yv];
+  crucible_points_to gp rv;
+};
+
+let miter_setup = do {
+  x <- crucible_fresh_var "x" (llvm_int 32);
+  y <- crucible_fresh_var "y" (llvm_int 32);
+  let xv = crucible_term x;
+  let yv = crucible_term y;
+  crucible_execute_func [xv, yv];
+  crucible_return (crucible_term {{ 0 : [32] }});
+};
+
+let main : TopLevel () = do {
+  m <- llvm_load_module "ref.bc";
+  update_spec <- crucible_llvm_unsafe_assume_spec m "update" update_setup;
+  imp_spec <- crucible_llvm_verify m "imp" [update_spec] false update_setup z3;
+  crucible_llvm_verify m "miter" [imp_spec] false miter_setup z3;
+  crucible_llvm_verify m "miter" [] false miter_setup z3;
+  print "Done";
+};
