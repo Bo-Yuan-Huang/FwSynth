@@ -1,0 +1,22 @@
+m <- llvm_load_module "miter.bc";
+
+let PKT_WID = 32; 
+let PHY_WID = 64;
+let ADDR_WID = 32;
+
+pkt_arr_2 <- fresh_symbolic "pkt_arr_2" {| [PKT_WID] |};
+pkt_arr_3 <- fresh_symbolic "pkt_arr_3" {| [PKT_WID] |};
+pkt_arr_4 <- fresh_symbolic "pkt_arr_4" {| [PKT_WID] |};
+pkt_arr_5 <- fresh_symbolic "pkt_arr_5" {| [PKT_WID] |};
+pkt_arr_6 <- fresh_symbolic "pkt_arr_6" {| [PKT_WID] |};
+pkt_arr_7 <- fresh_symbolic "pkt_arr_7" {| [PKT_WID] |};
+
+term_miter <- llvm_symexec m "miter" 
+              [ ("pkt_arr", 8), ("g_PHY_ARR", 4), ("TX_FIFO_BUFF", 4) ]
+              [ ("*pkt_arr", {{ [0x00000000, 0x00000008, pkt_arr_2, pkt_arr_3, pkt_arr_4, pkt_arr_5, pkt_arr_6, pkt_arr_7] }}, 8), 
+                ("pkt_num", {{ 8 : [32] }}, 1) ]
+              [ ("return", 1) ]
+              true;
+
+write_core "func.core" term_miter;
+
