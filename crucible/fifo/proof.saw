@@ -20,7 +20,7 @@ let miter_setup = do {
   x6 <- crucible_fresh_var "pkt6" (llvm_int 32);
   x7 <- crucible_fresh_var "pkt7" (llvm_int 32);
   x8 <- crucible_fresh_var "pkt8" (llvm_int 32);
-  x9 <- crucible_fresh_var "pkt0" (llvm_int 32);
+  x9 <- crucible_fresh_var "pkt9" (llvm_int 32);
   x10 <- crucible_fresh_var "pkt10" (llvm_int 32);
   x11 <- crucible_fresh_var "pkt11" (llvm_int 32);
   x12 <- crucible_fresh_var "pkt12" (llvm_int 32);
@@ -58,4 +58,3 @@ let main : TopLevel () = do {
   print "Done";
 };
 
-main;
