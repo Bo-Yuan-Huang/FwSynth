@@ -1,0 +1,18 @@
+m <- llvm_load_module "target.bc";
+
+let NUM = 4; 
+let WID = 32;
+
+c_in_state <- fresh_symbolic "c_in_state" {| [NUM][WID] |};
+c_in_key <- fresh_symbolic "c_in_key" {| [NUM][WID] |};
+
+print "Start symexec";
+
+term_aes <- time (llvm_symexec m "AES" 
+                  [ ("c_in_state", NUM), ("c_in_key", NUM), ("out_c_bytes", NUM) ]
+                  [ ("*c_in_state", c_in_state, NUM), ("*c_in_key", c_in_key, NUM) ]
+                  [ ("*out_c_bytes", NUM) ]
+                  true);
+
+write_core "aes.core" term_aes;
+
